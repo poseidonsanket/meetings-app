@@ -17,13 +17,23 @@ const HomePage = (props) => {
     </div>
   );
 };
+export async function getServerSideProps(context) {
+  const req = context.req;
+  const res = context.res;
 
-export async function getStaticProps() {
   return {
     props: {
       meetups: Dummy_MeetUp,
     },
   };
 }
+// export async function getStaticProps() {
+//   return {
+//     props: {
+//       meetups: Dummy_MeetUp,
+//     },
+//     revalidate: 1,
+//   };
+// }
 
 export default HomePage;
