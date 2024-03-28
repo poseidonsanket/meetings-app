@@ -1,41 +1,60 @@
 import React, { Fragment } from "react";
 import MeetUpDetail from "../../components/meetups/MeetUpDetail";
+import { MongoClient, ObjectId } from "mongodb";
 
-const MeetupDetails = () => {
+const MeetupDetails = (props) => {
   return (
     <MeetUpDetail
-      image="https://imgs.search.brave.com/NtmEfPH0tfwV0IMfXhG3IXnhiF-KjIK9zWAo1BmRFI8/rs:fit:500:0:0/g:ce/aHR0cHM6Ly9jZG4u/cGl4YWJheS5jb20v/cGhvdG8vMjAxMy8w/NC8xMS8xOS80Ni9i/dWlsZGluZy0xMDI4/NDBfNjQwLmpwZw"
-      title="xyz"
-      address="xyz"
-      description="xyz"
+      image={props.meetupData.image}
+      title={props.meetupData.title}
+      address={props.meetupData.address}
+      description={props.meetupData.description}
     />
   );
 };
 
 export async function getStaticPaths() {
+  const client = await MongoClient.connect(
+    "mongodb+srv://sanket:sanket@cluster0.nt4zm3m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection("meetups");
+
+  const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray();
+
+  client.close();
+  
   return {
     fallback: false,
-    paths: [
-      {
-        params: {
-          meetupId: "m1",
-        },
-      },
-    ],
+    paths: meetups.map((meetup) => ({
+      params: { meetupId: meetup._id.toString() },
+    })),
   };
 }
 
 export async function getStaticProps(context) {
   const meetupId = context.params.meetupId;
+  const client = await MongoClient.connect(
+    "mongodb+srv://sanket:sanket@cluster0.nt4zm3m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection("meetups");
+
+  const selectedmeetup = await meetupsCollection.findOne({
+    _id: new ObjectId(meetupId),
+  });
+
+  client.close();
   return {
     props: {
       meetupData: {
-        image:
-          "https://imgs.search.brave.com/NtmEfPH0tfwV0IMfXhG3IXnhiF-KjIK9zWAo1BmRFI8/rs:fit:500:0:0/g:ce/aHR0cHM6Ly9jZG4u/cGl4YWJheS5jb20v/cGhvdG8vMjAxMy8w/NC8xMS8xOS80Ni9i/dWlsZGluZy0xMDI4/NDBfNjQwLmpwZw",
-        id: meetupId,
-        title: "xyz",
-        address: "xyz",
-        description: "xyz",
+        id: selectedmeetup._id.toString(),
+        title: selectedmeetup.title,
+        address: selectedmeetup.address,
+        image: selectedmeetup.image,
+        description: selectedmeetup.description,
       },
     },
   };
